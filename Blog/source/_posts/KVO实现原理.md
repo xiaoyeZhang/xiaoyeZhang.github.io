@@ -1,6 +1,6 @@
 ---
-
-## title: iOS -KVO 实现原理
+title: iOS -KVO 实现原理
+---
 
 # 一、概述
 
