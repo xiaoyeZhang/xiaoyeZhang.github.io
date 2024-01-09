@@ -1,0 +1,653 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Scanf">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="前言在实际的开发过程中，我们会遇到一些需要显示PDF的场景，比如官方文件（为了保证原有的格式显示正常，通常会做成PDF来展示），同时也会要求跳转到指定的PDF的页码中,这里我们来讨论一个展示PDF并且调整指定的页码的方式。 简单的介绍下加载PDF的几种方式(PDF可能是网络加载的，也可能是本地的)  WKWebView加载本地或者网络pdf文档 QLPreviewController加载pdf文档">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS 原生加载PDF文档(主要功能:跳转指定的页码)">
+<meta property="og:url" content="http://example.com/2023/11/24/%E5%8E%9F%E7%94%9F%E5%8A%A0%E8%BD%BDPDF%E6%96%87%E6%A1%A3/index.html">
+<meta property="og:site_name" content="Scanf">
+<meta property="og:description" content="前言在实际的开发过程中，我们会遇到一些需要显示PDF的场景，比如官方文件（为了保证原有的格式显示正常，通常会做成PDF来展示），同时也会要求跳转到指定的PDF的页码中,这里我们来讨论一个展示PDF并且调整指定的页码的方式。 简单的介绍下加载PDF的几种方式(PDF可能是网络加载的，也可能是本地的)  WKWebView加载本地或者网络pdf文档 QLPreviewController加载pdf文档">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-11-24T08:43:50.000Z">
+<meta property="article:modified_time" content="2024-01-09T08:52:06.289Z">
+<meta property="article:author" content="Scanf">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>iOS 原生加载PDF文档(主要功能:跳转指定的页码) - Scanf</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.5","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.0.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Scanf</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="iOS 原生加载PDF文档(主要功能:跳转指定的页码)"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-11-24 16:43" pubdate>
+          2023年11月24日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          43 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">iOS 原生加载PDF文档(主要功能:跳转指定的页码)</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在实际的开发过程中，我们会遇到一些需要显示PDF的场景，比如官方文件（为了保证原有的格式显示正常，通常会做成PDF来展示），同时也会要求跳转到指定的PDF的页码中,这里我们来讨论一个展示PDF并且调整指定的页码的方式。</p>
+<p>简单的介绍下加载PDF的几种方式(PDF可能是网络加载的，也可能是本地的)</p>
+<ul>
+<li>WKWebView加载本地或者网络pdf文档</li>
+<li>QLPreviewController加载pdf文档</li>
+<li>用CGContext画pdf文档，并结合UIPageViewController展示</li>
+<li>使用第三方框架vfr&#x2F;Reader加载pdf文档</li>
+</ul>
+<p>在这里我使用CGContext加上UICollectionView来实现加载PDF和跳转指定页码,(其他方法暂时不提及)</p>
+<h4 id="第一步-创建UICollectionView"><a href="#第一步-创建UICollectionView" class="headerlink" title="第一步  创建UICollectionView"></a>第一步  创建UICollectionView</h4><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">self.TopHeight</span> = self.navigationController.navigationBar.frame.size.height + [UIApplication sharedApplication].statusBarFrame.size.height<span class="hljs-comment">;</span><br><br><span class="hljs-attr">self.layout</span> = [[UICollectionViewFlowLayout alloc] init]<span class="hljs-comment">;</span><br>    <br><span class="hljs-attr">self.layout.itemSize</span> = CGSizeMake(self.view.bounds.size.width, self.view.frame.size.height-self.TopHeight)<span class="hljs-comment">;</span><br><br><span class="hljs-section">[self.layout setScrollDirection:self.scrollDirection]</span><span class="hljs-comment">;//设置滑动方向为水平方向，也可以设置为竖直方向</span><br>    <br><span class="hljs-attr">self.layout.minimumLineSpacing</span> = <span class="hljs-number">0</span><span class="hljs-comment">;//设置item之间最下行距</span><br>    <br><span class="hljs-attr">self.layout.minimumInteritemSpacing</span> = <span class="hljs-number">0</span><span class="hljs-comment">;//设置item之间最小间距</span><br>    <br><span class="hljs-attr">_CollectionView</span> = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:self.layout]<span class="hljs-comment">;</span><br>    <br><span class="hljs-attr">_CollectionView.backgroundColor</span> = [UIColor whiteColor]<span class="hljs-comment">;</span><br><span class="hljs-attr">_CollectionView.pagingEnabled</span> = self.PDFPagingEnabled<span class="hljs-comment">;//设置集合视图一页一页的翻动</span><br><span class="hljs-attr">_CollectionView.delegate</span> = self<span class="hljs-comment">;</span><br><span class="hljs-attr">_CollectionView.dataSource</span> = self<span class="hljs-comment">;</span><br><br><br><span class="hljs-section">[self.view addSubview:self.CollectionView]</span><span class="hljs-comment">;//将集合视图添加到当前视图上</span><br><br><span class="hljs-section">[self.CollectionView mas_makeConstraints:^(MASConstraintMaker *make) &#123;</span><br><span class="hljs-section">    make.top.mas_equalTo(self.TopHeight);</span><br><span class="hljs-section">    make.left.right.equalTo(self.view);</span><br><span class="hljs-section">    make.height.mas_equalTo(self.view.frame.size.height-self.TopHeight);</span><br><span class="hljs-section">&#125;]</span><span class="hljs-comment">;</span><br><br></code></pre></td></tr></table></figure>
+
+<h4 id="第二步-创建UICollectionViewCell"><a href="#第二步-创建UICollectionViewCell" class="headerlink" title="第二步  创建UICollectionViewCell"></a>第二步  创建UICollectionViewCell</h4><p>在自定义的cell中对showView重写set方法,重写cell视图</p>
+<figure class="highlight sqf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sqf"><span class="hljs-keyword">for</span>(UIView *tempView <span class="hljs-built_in">in</span> <span class="hljs-variable">_contentScrollView</span>.subviews) &#123;<br>    <br>    [tempView removeFromSuperview];<span class="hljs-comment">//移除_contentScrollView中的所有视图</span><br>    <br>&#125;<br><br><span class="hljs-variable">_showView</span> = showView;<span class="hljs-comment">//赋值</span><br><br>[<span class="hljs-variable">_contentScrollView</span> addSubview:showView];<span class="hljs-comment">//将需要显示的视图添加到_contentScrollView上</span><br><br></code></pre></td></tr></table></figure>
+
+<h4 id="第三步-读取PDF文件"><a href="#第三步-读取PDF文件" class="headerlink" title="第三步  读取PDF文件"></a>第三步  读取PDF文件</h4><figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs objectivec"><span class="hljs-comment">//用于读取pdf文件</span><br>- (<span class="hljs-built_in">CGPDFDocumentRef</span>)pdfRefByDataByUrl:(<span class="hljs-built_in">NSString</span> *)aFileUrl &#123;<br>    <br>    <span class="hljs-built_in">NSData</span> *pdfData;<br>    <br>    <span class="hljs-keyword">if</span> ([aFileUrl hasPrefix:<span class="hljs-string">@&quot;http://&quot;</span>] || [aFileUrl hasPrefix:<span class="hljs-string">@&quot;https://&quot;</span>]) &#123;<br>     <br>        pdfData = [<span class="hljs-built_in">NSData</span> dataWithContentsOfURL:[<span class="hljs-built_in">NSURL</span> URLWithString:aFileUrl]];<br><br>    &#125;<span class="hljs-keyword">else</span>&#123;<br>        <br>        pdfData = [<span class="hljs-built_in">NSData</span> dataWithContentsOfFile:aFileUrl];<br><br>    &#125;<br><br>    <span class="hljs-built_in">CFDataRef</span> dataRef = (__bridge_retained <span class="hljs-built_in">CFDataRef</span>)(pdfData);<br><br>    <span class="hljs-built_in">CGDataProviderRef</span> proRef = <span class="hljs-built_in">CGDataProviderCreateWithCFData</span>(dataRef);<br>    <span class="hljs-built_in">CGPDFDocumentRef</span> pdfRef = <span class="hljs-built_in">CGPDFDocumentCreateWithProvider</span>(proRef);<br><br>    <span class="hljs-built_in">CGDataProviderRelease</span>(proRef);<br>    <br>    <span class="hljs-keyword">if</span> (dataRef == <span class="hljs-literal">nil</span>) &#123;<br>    <br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>;<br>    <br>    &#125;<br>    <br>    <span class="hljs-built_in">CFRelease</span>(dataRef);<br><br><br>    <span class="hljs-keyword">return</span> pdfRef;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="第四步-获取所有需要显示的PDF页面"><a href="#第四步-获取所有需要显示的PDF页面" class="headerlink" title="第四步  获取所有需要显示的PDF页面"></a>第四步  获取所有需要显示的PDF页面</h4><figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs objectivec"><span class="hljs-comment">//获取所有需要显示的PDF页面</span><br><br>- (<span class="hljs-type">void</span>)getDataArrayValue &#123;<br>    <br>    size_t totalPages = <span class="hljs-built_in">CGPDFDocumentGetNumberOfPages</span>(_docRef);<span class="hljs-comment">//获取总页数</span><br><br>    <span class="hljs-keyword">self</span>.totalPage= (<span class="hljs-type">int</span>)totalPages;<span class="hljs-comment">//给全局变量赋值</span><br><br>    <span class="hljs-built_in">NSMutableArray</span> *arr = [<span class="hljs-built_in">NSMutableArray</span> new];<br>    <br>    <span class="hljs-comment">//通过循环创建需要显示的PDF页面，并把这些页面添加到数组中</span><br>    <br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i =<span class="hljs-number">1</span>; i &lt;= totalPages; i++) &#123;<br><br>        RiderPDFView *view = [[RiderPDFView alloc] initWithFrame:<span class="hljs-built_in">CGRectMake</span>(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-keyword">self</span>.view.frame.size.width,<span class="hljs-keyword">self</span>.view.frame.size.height-<span class="hljs-keyword">self</span>.TopHeight) documentRef: _docRef andPageNum:i];<br><br>        [arr addObject:view];<br><br>    &#125;<br><br>    <span class="hljs-keyword">self</span>.dataArray= arr;<span class="hljs-comment">//给数据数组赋值</span><br>    <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="第五步-创建RiderPDFView视图"><a href="#第五步-创建RiderPDFView视图" class="headerlink" title="第五步  创建RiderPDFView视图,"></a>第五步  创建RiderPDFView视图,</h4><p>在RiderPDFView.m文件中绘制视图</p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs objectivec"><span class="hljs-comment">//重写- (void)drawRect:(CGRect)rect方法</span><br><br>- (<span class="hljs-type">void</span>)drawRect:(<span class="hljs-built_in">CGRect</span>)rect &#123;<br>    <br>    [<span class="hljs-keyword">self</span> drawPDFIncontext:<span class="hljs-built_in">UIGraphicsGetCurrentContext</span>()];<span class="hljs-comment">//将当前的上下文环境传递到方法中，用于绘图</span><br>    <br>&#125;<br><br><span class="hljs-comment">//- (void)drawRect:(CGRect)rect具体的内容</span><br><br>- (<span class="hljs-type">void</span>)drawPDFIncontext:(<span class="hljs-built_in">CGContextRef</span>)context &#123;<br>    <br>    <span class="hljs-built_in">CGContextTranslateCTM</span>(context,<span class="hljs-number">0.0</span>,<span class="hljs-keyword">self</span>.frame.size.height);<br>    <br>    <span class="hljs-built_in">CGContextScaleCTM</span>(context,<span class="hljs-number">1.0</span>, <span class="hljs-number">-1.0</span>);<br><br><span class="hljs-comment">//上面两句是对环境做一个仿射变换，如果不执行上面两句那么绘制出来的PDF文件会呈倒置效果，第二句的作用是使图形呈正立显示，第一句是调整图形的位置，如不执行绘制的图形会不在视图可见范围内</span><br>    <br>    <span class="hljs-built_in">CGPDFPageRef</span>  pageRef =<span class="hljs-built_in">CGPDFDocumentGetPage</span>(documentRef,pageNum);<span class="hljs-comment">//获取需要绘制的页码的数据。两个参数，第一个数传递进来的PDF资源数据，第二个是传递进来的需要显示的页码</span><br>    <br>    <span class="hljs-built_in">CGContextSaveGState</span>(context);<span class="hljs-comment">//记录当前绘制环境，防止多次绘画</span><br>    <br>    <span class="hljs-built_in">CGAffineTransform</span>  pdfTransForm =<span class="hljs-built_in">CGPDFPageGetDrawingTransform</span>(pageRef,kCGPDFCropBox,<span class="hljs-keyword">self</span>.bounds,<span class="hljs-number">0</span>,<span class="hljs-literal">true</span>);<span class="hljs-comment">//创建一个仿射变换的参数给函数。第一个参数是对应页数据；第二个参数是个枚举值，我每个都试了一下，貌似没什么区别……但是网上看的资料都用的我当前这个，所以就用这个了；第三个参数，是图形绘制的区域，我设置的是当前视图整个区域，如果有需要，自然是可以修改的；第四个是旋转的度数，这里不需要旋转了，所以设置为0；第5个，传递true，会保持长宽比</span><br>    <br>    <span class="hljs-built_in">CGContextConcatCTM</span>(context, pdfTransForm);<span class="hljs-comment">//把创建的仿射变换参数和上下文环境联系起来</span><br>    <br>    <span class="hljs-built_in">CGContextDrawPDFPage</span>(context, pageRef);<span class="hljs-comment">//把得到的指定页的PDF数据绘制到视图上</span><br>    <br>    <span class="hljs-built_in">CGContextRestoreGState</span>(context);<span class="hljs-comment">//恢复图形状态</span><br>    <br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<h4 id="第六步-加载pdf内容"><a href="#第六步-加载pdf内容" class="headerlink" title="第六步  加载pdf内容"></a>第六步  加载pdf内容</h4><p>在PDFReadViewController.m文件中collectionView的代理方法中加载RiderPDFView视图</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs verilog">CollectionViewCell *<span class="hljs-keyword">cell</span> = [collectionView dequeueReusableCellWithReuseIdentifier:@<span class="hljs-string">&quot;CollectionViewCell&quot;</span> forIndexPath:indexPath];<br><br><span class="hljs-keyword">cell</span><span class="hljs-variable">.cellTapDelegate</span> = self;<span class="hljs-comment">//设置tap事件代理</span><br><br><span class="hljs-keyword">cell</span><span class="hljs-variable">.showView</span> = self<span class="hljs-variable">.dataArray</span>[indexPath<span class="hljs-variable">.row</span>];<span class="hljs-comment">//赋值，设置每个item中显示的内容</span><br><br><span class="hljs-keyword">return</span> <span class="hljs-keyword">cell</span>;<br></code></pre></td></tr></table></figure>
+
+<h1 id="最后-Demo"><a href="#最后-Demo" class="headerlink" title="最后(Demo)"></a>最后(<a target="_blank" rel="noopener" href="https://github.com/xiaoyeZhang/PDF-READ">Demo</a>)</h1><p>pdf阅读器已经开源了框架,具体使用方法如下</p>
+<h1 id="第一步：使用CocoaPods导入PDF-READ"><a href="#第一步：使用CocoaPods导入PDF-READ" class="headerlink" title="第一步：使用CocoaPods导入PDF-READ"></a>第一步：使用CocoaPods导入PDF-READ</h1><p>CocoaPods 导入</p>
+<p>  在文件 Podfile 中加入以下内容：</p>
+<pre><code class="hljs">pod &#39;PDF-READ&#39;
+</code></pre>
+<p>  然后在终端中运行以下命令：</p>
+<pre><code class="hljs">pod install
+</code></pre>
+<p>  或者这个命令：</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs vim">禁止升级 CocoaPods 的 spec 仓库，否则会卡在 Analyzing dependencies，非常慢<br>  pod install --<span class="hljs-keyword">verbose</span> --<span class="hljs-keyword">no</span>-repo-<span class="hljs-keyword">update</span><br>或者<br>  pod <span class="hljs-keyword">update</span> --<span class="hljs-keyword">verbose</span> --<span class="hljs-keyword">no</span>-repo-<span class="hljs-keyword">update</span><br></code></pre></td></tr></table></figure>
+<p>  完成后，CocoaPods 会在您的工程根目录下生成一个 .xcworkspace 文件。您需要通过此文件打开您的工程，而不是之前的 .xcodeproj。</p>
+<h1 id="第二步：初始化PDFReadViewController类-同时传入文档地址"><a href="#第二步：初始化PDFReadViewController类-同时传入文档地址" class="headerlink" title="第二步：初始化PDFReadViewController类,同时传入文档地址"></a>第二步：初始化PDFReadViewController类,同时传入文档地址</h1><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs csharp">PDFReadViewController *vc = [[PDFReadViewController alloc]<span class="hljs-keyword">init</span>];<br><br>vc.fileUrl = <span class="hljs-string">@&quot;http://172.16.9.159:8888/002.pdf&quot;</span>; <span class="hljs-comment">//不能为空,可以为网络地址,也可以为本的存储地址</span><br><br>[<span class="hljs-meta">self.navigationController pushViewController:vc animated:YES</span>];<br><br><br></code></pre></td></tr></table></figure>
+
+<h1 id="第三步（可选）：设置阅读模式-横向-或纵向阅读-是否翻页-设置跳转指定的页码"><a href="#第三步（可选）：设置阅读模式-横向-或纵向阅读-是否翻页-设置跳转指定的页码" class="headerlink" title="第三步（可选）：设置阅读模式,横向,或纵向阅读,是否翻页,设置跳转指定的页码"></a>第三步（可选）：设置阅读模式,横向,或纵向阅读,是否翻页,设置跳转指定的页码</h1>  <figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs ini">  <br><span class="hljs-attr">vc.scrollDirection</span> = UICollectionViewScrollDirectionHorizontal<span class="hljs-comment">; // 横向,或纵向阅读</span><br><br><span class="hljs-attr">vc.PDFPagingEnabled</span> = <span class="hljs-literal">YES</span><span class="hljs-comment">;  // 是否翻页</span><br><br><span class="hljs-attr">vc.item</span> = @<span class="hljs-string">&quot;2&quot;</span><span class="hljs-comment">; // 指定的页码</span><br><br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>iOS 原生加载PDF文档(主要功能:跳转指定的页码)</div>
+      <div>http://example.com/2023/11/24/原生加载PDF文档/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Scanf</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年11月24日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2023/11/27/KVO%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" title="iOS -KVO 实现原理">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">iOS -KVO 实现原理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/11/23/hello-world/" title="Hello World">
+                        <span class="hidden-mobile">Hello World</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
