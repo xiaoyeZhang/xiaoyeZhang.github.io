@@ -1,6 +1,7 @@
 
 ---
 title: CocoaPods、Carthage、Swift Package Manager 对比
+date: 2023-12-04 10:33:23
 ---
 
 ### **一、iOS 管理第三方库工具有以下几种：**

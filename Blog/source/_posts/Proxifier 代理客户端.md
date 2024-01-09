@@ -1,5 +1,6 @@
 ---
 title: Xcode 设置 SPM 全局代理(Proxifier)
+date: 2023-12-04 15:13:53
 ---
 
 ### **一、前提**
