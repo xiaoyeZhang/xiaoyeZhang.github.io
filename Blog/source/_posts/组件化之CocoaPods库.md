@@ -51,13 +51,19 @@ What is your class prefix?
 
 ```
 
-##### 2.2 不使用 `pod lib create`
+##### 2.2 不使用 `pod lib create`, 利用Xcode创建
 
-###### 2.2.1 克隆远程项目到本地，新建Classes文件夹
+###### 2.2.1 克隆远程项目到本地
 
     git clone https://github.com/xiaoyeZhang/NCCalendarPicker.git
 
-###### 2.2.2 将写好的开源库源代码放入本地的Git仓库下的Classes目录下
+###### 2.2.2 点击Xcode菜单：File -> New -> Package
+
+![](/images/CocoaPods/lC6Pbfle0nLuhLCp.png)
+
+![](/images/CocoaPods/OziiKrMXxebbX4sr3On.png)
+
+###### 2.2.3 将写好的开源库源代码放入本地的Git仓库下的Sources目录下
 
     // 创建NCCalendarPicker.podspec
     pod spec create NCCalendarPicker
